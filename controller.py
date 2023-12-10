@@ -1,106 +1,14 @@
 import random
 from time import sleep
-from view import GameView, PlayerView
-
-# Characters
-CHARACTERS = ["duke", "assassin", "captain", "ambassador", "contessa"]
-
-# Rules config for each action
-COUP_RULES_CONFIG = {
-    "tax": {
-        "performed_by": "duke",
-        "income": 3,
-        "cost": 0,
-        "blocked_by": [],
-        "can_be_challenged": True
-    },
-    "steal": {
-        "performed_by": "captain",
-        "amount": 2,
-        "cost": 0,
-        "income": 0,
-        "blocked_by": ["captain", "ambassador"],
-        "can_be_challenged": True
-    },
-    "assassinate": {
-        "performed_by": "assassin",
-        "cost": 3,
-        "income": 0,
-        "blocked_by": ["contessa"],
-        "can_be_challenged": True
-    },
-    "exchange": {
-        "performed_by": "ambassador",
-        "income": 0,
-        "cost": 0,
-        "blocked_by": [],  # Exchange cannot be blocked
-        "can_be_challenged": True
-    },
-    "foreign_aid": {
-        "performed_by": None,
-        "income": 2,
-        "cost": 0,
-        "blocked_by": ["duke"],
-        "can_be_challenged": False
-    },
-    "income": {
-        "performed_by": None,
-        "income": 1,
-        "cost": 0,
-        "blocked_by": [],  # Income cannot be blocked
-        "can_be_challenged": False
-    },
-    "coup": {
-        "performed_by": None,
-        "income": 0,
-        "cost": 7,  # The cost to perform a coup
-        "blocked_by": [],  # Coup cannot be blocked
-        "can_be_challenged": False
-    }
-}
-
-# constants
-MAX_COINS_FOR_COUP = 10
-MIN_PLAYERS = 2
-MAX_PLAYERS = 6
-
-
-class Player:
-    def __init__(self, name, is_ai, cards=None):
-        self.name = name
-        self.is_ai = is_ai
-        self.coins = 2
-        self.cards = cards if cards is not None else []
-        self.revealed = []
-        self.view = PlayerView()
-
-    def reveal_card(self):
-        if self.is_eliminated:
-            raise Exception("Player has no more cards to reveal and is already eliminated.")
-
-        # Choose a card to reveal
-        card_index = 0
-        if self.is_ai:
-            self.view.print_ai_thinking_reveal()
-            sleep(1)
-            card_index = random.choice([0, 1]) if len(self.cards) > 1 else 0
-        elif len(self.cards) > 1:
-            card_index = self.view.get_card_to_reveal(self)
-
-        revealed_card = self.cards.pop(card_index)
-        self.revealed.append(revealed_card)
-        self.view.display_player_revealed_card(self.name, revealed_card)
-
-        # Check if the player is eliminated
-        self.check_elimination()
-
-    def check_elimination(self):
-        if self.is_eliminated:
-            self.view.display_player_eliminated(self.name)
-
-    @property
-    def is_eliminated(self):
-        return len(self.cards) == 0
+from views import GameView
+from player import Player
+from constants import (
+    CHARACTERS,
+    COUP_RULES_CONFIG,
+    MAX_COINS_FOR_COUP,
+    MIN_PLAYERS,
+    MAX_PLAYERS
+)
 
 
 class GameController:

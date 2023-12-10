@@ -1,14 +1,6 @@
 from colored import Fore, Back, Style
 from helpers import colorize_card, colorize_text, colorize_amount
-actions_dict = {
-    "income": colorize_text("Income (Take 1 coin)", "income"),
-    "foreign_aid": colorize_text("Foreign aid (Take 2 coins)", "foreign_aid"),
-    "coup": colorize_text("Coup (Pay 7 coins to launch a coup)", "coup"),
-    "tax": colorize_text("Tax (Take 3 coins as the Duke)", "tax"),
-    "steal": colorize_text("Steal (Steal 2 coins as the Captain)", "steal"),
-    "exchange": colorize_text("Exchange (Exchange cards with the Court Deck as the Ambassador)", "exchange"),
-    "assassinate": colorize_text("Assassinate (Pay 3 coins to assassinate another player's influence)", "assassinate")
-}
+from constants import ACTION_LABELS
 
 
 class PlayerView:
@@ -125,7 +117,7 @@ class GameView:
         """
         print(f"What would you like to do, {player.name}?")
         for i, option in enumerate(options):
-            print(f"{i + 1}. {actions_dict[option]}")
+            print(f"{i + 1}. {ACTION_LABELS[option]}")
         option_number = input("Enter the number of your choice: ")
         # validate option number
         if not option_number.isdigit():
