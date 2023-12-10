@@ -33,4 +33,3 @@ def colorize_card(card):
 
 def colorize_amount(amount):
     return f"{Fore.YELLOW}{amount}{Style.RESET}"
-        

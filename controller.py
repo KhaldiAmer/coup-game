@@ -75,33 +75,27 @@ class Player:
         self.view = PlayerView()
 
     def reveal_card(self):
-        if len(self.cards) == 0:
-            raise Exception(
-                "Player has no more cards to reveal. and is already eliminated."
-            )
+        if self.is_eliminated:
+            raise Exception("Player has no more cards to reveal and is already eliminated.")
 
-        if len(self.cards) == 1:
-            self.view.display_player_revealed_card(self.name, self.cards[0])
-            self.revealed.extend([self.cards.pop()])
-            # Check if the player is eliminated
-            self.check_elimination()
-            return
-
+        # Choose a card to reveal
+        card_index = 0
         if self.is_ai:
+            self.view.print_ai_thinking_reveal()
             sleep(1)
-            # AI logic to choose a random card to reveal
-            card_index = random.choice([0, 1])
-        else:
+            card_index = random.choice([0, 1]) if len(self.cards) > 1 else 0
+        elif len(self.cards) > 1:
             card_index = self.view.get_card_to_reveal(self)
 
-        self.view.display_player_revealed_card(self.name, self.cards[card_index])
-        self.revealed.extend([self.cards.pop(card_index)])
+        revealed_card = self.cards.pop(card_index)
+        self.revealed.append(revealed_card)
+        self.view.display_player_revealed_card(self.name, revealed_card)
 
         # Check if the player is eliminated
         self.check_elimination()
 
     def check_elimination(self):
-        if len(self.cards) == 0:
+        if self.is_eliminated:
             self.view.display_player_eliminated(self.name)
 
     @property
@@ -122,7 +116,7 @@ class GameController:
         # Setup the players
         self.players = [Player("Human", False, self.deck[:2])]
         self.deck = self.deck[2:]  # Remove the cards taken by the human player
-        for i in range(1, number_of_players):
+        for i in range(1, number_of_players + 1):
             self.players.append(Player(f"AI {i}", True, self.deck[:2]))
             self.deck = self.deck[2:]  # Remove the cards taken by AI players
 
@@ -170,7 +164,7 @@ class GameController:
         current_player = self.current_player
         target = None
         if current_player.is_ai:
-            self.view.print_ai_thinking()
+            self.view.print_ai_thinking(about="choosing an action")
             sleep(1)
             # AI logic to choose an action
             player_options = self.player_available_actions(
@@ -219,8 +213,8 @@ class GameController:
                     return not challenge_successful
 
                 # Handle block
-                if is_target and can_be_blocked and self.ask_block(player, action, target):
-                    block_successful = self.handle_block(player, action, target)
+                if is_target and can_be_blocked and self.ask_block(current_player, action, target):
+                    block_successful = self.handle_block(current_player, action, target)
                     return not block_successful
 
         # No challenge or block occurred
@@ -228,13 +222,18 @@ class GameController:
 
     def ask_challenge(self, player, current_player, action, target):
         if player.is_ai:
-            return self.ai_decide_to_challenge(player, current_player, action)
+            return self.ai_decide_to_challenge()
         else:
-            return self.view.get_challenge_decision(player, current_player, action, target)
+            return self.view.get_challenge_decision(
+                challenger=player,
+                challenged=current_player,
+                action=action,
+                target=target
+            )
 
     def ask_block(self, player, action, target):
-        if player.is_ai:
-            return self.ai_decide_to_block(player, action)
+        if target.is_ai:
+            return self.ai_decide_to_block()
         else:
             return self.view.get_block_decision(player, action, target)
 
@@ -269,13 +268,10 @@ class GameController:
     def handle_block(self, player: Player, action: str, target: Player = None):
         """
         Handle a block attempt.
-        - blocker: The player attempting to block.
-        - action: The action being blocked.
-        - action_player: The player who initiated the action.
         return True if the block is successful, False otherwise.
         """
-        # If the action player decides to challenge the block
-        if player.is_ai:
+        # If the target player decides to challenge the block
+        if target.is_ai:
             challenge_decision = self.ai_decide_to_challenge(player, target, action)
         else:
             challenge_decision = self.view.get_challenge_decision(player, target, action, target)
@@ -353,16 +349,16 @@ class GameController:
             target.coins -= steal_amount
 
     #  AI player methods
-    def ai_decide_to_challenge(self, player, target, action):
+    def ai_decide_to_challenge(self):
         # TODO: Finish this method
         # Randomly decide to challenge or not
-        self.view.print_ai_thinking()
+        self.view.print_ai_thinking(about="deciding to challenge")
         sleep(1)
         return random.choice([True, False])
 
-    def ai_decide_to_block(self, player, action):
+    def ai_decide_to_block(self):
         # TODO: Finish this method
-        self.view.print_ai_thinking()
+        self.view.print_ai_thinking(about="deciding to block")
         sleep(1)
         return random.choice([True, False])
 

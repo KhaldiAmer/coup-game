@@ -27,15 +27,19 @@ class PlayerView:
     def display_player_revealed_card(self, player_name, card):
         print(f"{Fore.RED}{player_name} revealed {card}{Style.RESET}")
 
+    def print_ai_thinking_reveal(self):
+        print(f"{Fore.DARK_CYAN}AI thinking about what to reveal...{Style.RESET}")
+
 
 class GameView:
     def __init__(self):
         pass
 
     def display_welcome_message(self):
-        print(f"{Fore.GREEN}Welcome to Coup - Command Line Edition{Style.RESET}\n")
+        print(f"{Fore.GREEN}Welcome to Coup - Command Line Edition{Style.RESET}")
 
     def display_state(self, players, current_player_index):
+        print(f"{Fore.GREEN}======================================={Style.RESET}")
         current_player = players[current_player_index]
         is_ai = current_player.is_ai
         if is_ai:
@@ -49,8 +53,8 @@ class GameView:
                     f"[{colorize_card(card)}]" for card in player.revealed
                 ])
                 print(f"{i + 1}. {player.name} ({len(player.cards)} cards) {revealed_cards} - {colorize_amount(player.coins)} coins")
-
-            print(f"Player {current_player_index + 1}'s turn (Human)" if current_player.is_ai is False else f"{Fore.YELLOW}AI's turn{Style.RESET}")
+            print(f"{Fore.GREEN}======================================={Style.RESET}")
+            print(f"Player {current_player.name}'s turn (Human)" if current_player.is_ai is False else f"{Fore.YELLOW}AI's turn{Style.RESET}")
             print(f"Coins: {colorize_amount(current_player.coins)}")
             cards = " ".join([f"[{colorize_card(card)}]" for card in current_player.cards])
             print(f"Cards: {cards}\n")
@@ -59,6 +63,7 @@ class GameView:
                     f"[{colorize_card(card)}]" for card in current_player.revealed
                 ])
                 print(f"Revealed cards: {revealed_cards}\n")
+        print(f"{Fore.GREEN}======================================={Style.RESET}")
 
     def print_error(self, error):
         print(f"{Fore.RED}{error}{Style.RESET}")
@@ -67,9 +72,9 @@ class GameView:
         """
         Format the action based on the character and action:
         """
-        character_text = f"by [{character}]" if character else ""
+        character_text = f"by [{colorize_card(character)}]" if character else ""
         target_name_text = f" on {target.name}" if target else ""
-        text = f"{player.name} choose to perform [{action}] {character_text}{target_name_text}"
+        text = f"{player.name} choose to perform [{colorize_text(action, action)}] {colorize_text(character_text, action)}{target_name_text}"
         if action == "income":
             print(f"{Fore.YELLOW}{text}{Style.RESET}")
         elif action == "foreign_aid":
@@ -183,7 +188,7 @@ class GameView:
         print(f"{Back.RED}Challenge failed. {challenged.name} did have a {claimed_card}.{Style.RESET}")
 
     def challenge_succeeded(self, challenger, challenged, claimed_card):
-        print(f"{Fore.GREEN}Challenge succeeded. {challenged.name} did not have a {claimed_card}.{Style.RESET}")
+        print(f"{Fore.GREEN}Challenge succeeded. {challenged.name} did not have a/an {claimed_card}.{Style.RESET}")
 
     def get_challenge_decision(
         self, challenger, challenged, action, target=None
@@ -245,5 +250,9 @@ class GameView:
 
         return cards_to_keep
 
-    def print_ai_thinking(self): 
-        print(f"{Fore.DARK_CYAN}AI thinking...{Style.RESET}")
+    def print_ai_thinking(self, about=""):
+        about_text = f" about {about}" if about else ""
+        print(f"{Fore.DARK_CYAN}AI thinking{about_text}...{Style.RESET}")
+
+    def ask_for_player_name(self):
+        return input("Enter your name: ") or "Human"

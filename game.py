@@ -5,6 +5,11 @@ from controller import GameController
 def main():
     controller = GameController()
     controller.view.display_welcome_message()
+
+    # Ask for human player name
+    player_name = controller.view.ask_for_player_name()
+    controller.players[0].name = player_name
+
     while not controller.is_game_over():
         controller.view.display_state(
             controller.players,
