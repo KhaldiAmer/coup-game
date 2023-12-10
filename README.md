@@ -6,5 +6,5 @@
 3. `pip3 install poetry`
 4. `poetry install`
 
-# Run the game
+## Run the game
 > `python game.py`
