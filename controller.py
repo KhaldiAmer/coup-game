@@ -209,7 +209,7 @@ class GameController:
 
         for player in players_to_ask:
             is_target = player == target
-            if player != current_player and not player.is_eliminated: # TODO: Delete eliminated as its handled in get_other_players
+            if player != current_player:
                 # Handle challenge
                 if can_be_challenged and self.ask_challenge(player, current_player, action, target):
                     challenge_successful = self.handle_challenge(player, current_player, action)
@@ -427,7 +427,7 @@ class GameController:
             player for player in self.players if not player.is_eliminated
         ]
         return len(active_players) == 1
-    
+
     def get_winner(self):
         # Return the winner of the game
         active_players = [
@@ -437,7 +437,7 @@ class GameController:
             raise Exception("The game is not over yet.")
 
         return active_players[0]
-    
+
     def reset(self):
         # Prompt the user for number of players
         number_of_players = int(input("Enter number of players: "))

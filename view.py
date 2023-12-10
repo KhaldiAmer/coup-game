@@ -33,8 +33,7 @@ class GameView:
         pass
 
     def display_welcome_message(self):
-        print(f"{Fore.GREEN}Welcome to Coup - Command Line Edition{Style.RESET}\n") 
-
+        print(f"{Fore.GREEN}Welcome to Coup - Command Line Edition{Style.RESET}\n")
 
     def display_state(self, players, current_player_index):
         current_player = players[current_player_index]
@@ -51,7 +50,7 @@ class GameView:
                 ])
                 print(f"{i + 1}. {player.name} ({len(player.cards)} cards) {revealed_cards} - {colorize_amount(player.coins)} coins")
 
-            print(f"Player {current_player_index + 1}'s turn (Human)" if current_player.is_ai == False else f"{Fore.YELLOW}AI's turn{Style.RESET}") 
+            print(f"Player {current_player_index + 1}'s turn (Human)" if current_player.is_ai is False else f"{Fore.YELLOW}AI's turn{Style.RESET}")
             print(f"Coins: {colorize_amount(current_player.coins)}")
             cards = " ".join([f"[{colorize_card(card)}]" for card in current_player.cards])
             print(f"Cards: {cards}\n")
@@ -69,7 +68,7 @@ class GameView:
         """
         character_text = f"by [{character}]" if character else ""
         target_name_text = f" on {target.name}" if target else ""
-        text = f"{player.name} choose to perform [{action}] {character_text}{target_name_text}" 
+        text = f"{player.name} choose to perform [{action}] {character_text}{target_name_text}"
         if action == "income":
             print(f"{Fore.YELLOW}{text}{Style.RESET}")
         elif action == "foreign_aid":
@@ -108,7 +107,7 @@ class GameView:
         print(f"{player.name} has {colorize_amount(player.coins)} coins now.")
 
     def print_assassinate(self, player, target):
-        self.announce_action(player, "assassinated", "assassin", target=target) 
+        self.announce_action(player, "assassinated", "assassin", target=target)
 
     def print_exchange(self, player):
         self.announce_action(player, "exchange", "ambassador")
@@ -146,7 +145,7 @@ class GameView:
         return players[int(player_number) - 1]
 
     def announce_eliminated_player(self, player):
-        print(f"{Fore.RED}{player.name} has been eliminated from the game.{Style.RESET}") 
+        print(f"{Fore.RED}{player.name} has been eliminated from the game.{Style.RESET}")
     # Additional methods for displaying information and results
 
     @staticmethod
@@ -165,6 +164,7 @@ class GameView:
         else:
             self.print_error("Invalid decision. Try again.")
             return self.ask_to_play_again()
+
     def test_announce_action(self):
         # with all possible options:
         class Player:
@@ -179,8 +179,8 @@ class GameView:
         self.print_coup(player, "target")
 
     def challenge_failed(self, challenger, challenged, claimed_card):
-        print(f"Challenge failed. {challenged.name} did have a {claimed_card}.")    
-    
+        print(f"Challenge failed. {challenged.name} did have a {claimed_card}.")
+
     def challenge_succeeded(self, challenger, challenged, claimed_card):
         print(f"Challenge succeeded. {challenged.name} did not have a {claimed_card}.")
 
@@ -219,7 +219,7 @@ class GameView:
             return False
         else:
             self.print_error("Invalid decision. Try again.")
-            return self.get_block_decision(player, action, target)  
+            return self.get_block_decision(player, action, target)
 
     def block_successful(self, blocker, action, character, target):
         print(f"{blocker.name} blocked {target.name}'s {action} {character}.")
@@ -241,5 +241,5 @@ class GameView:
                 self.print_error("Invalid card. Try again.")
                 return self.choose_cards_to_exchange(player, cards)
             cards_to_keep.append(cards[card_index])
-            
+
         return cards_to_keep
