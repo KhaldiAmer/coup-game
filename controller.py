@@ -116,7 +116,7 @@ class GameController:
         # Setup the players
         self.players = [Player("Human", False, self.deck[:2])]
         self.deck = self.deck[2:]  # Remove the cards taken by the human player
-        for i in range(1, number_of_players + 1):
+        for i in range(1, number_of_players + 3):
             self.players.append(Player(f"AI {i}", True, self.deck[:2]))
             self.deck = self.deck[2:]  # Remove the cards taken by AI players
 
@@ -205,37 +205,80 @@ class GameController:
         players_to_ask = self.get_other_players(current_player)
 
         for player in players_to_ask:
-            is_target = player == target
+            # If the player is not the current player and not eliminated
             if player != current_player:
-                # Handle challenge
-                if can_be_challenged and self.ask_challenge(player, current_player, action, target):
-                    challenge_successful = self.handle_challenge(player, current_player, action)
-                    return not challenge_successful
+                # For challenge
+                if can_be_challenged and self.ask_challenge(
+                    challenger=player,
+                    challenged=current_player,
+                    action=action,
+                    target=target
+                ):
+                    challenge_successful = self.handle_challenge(
+                        challenger=player,
+                        challenged=current_player,
+                        action=action
+                    )
+                    return challenge_successful is False
 
-                # Handle block
-                if is_target and can_be_blocked and self.ask_block(current_player, action, target):
-                    block_successful = self.handle_block(current_player, action, target)
-                    return not block_successful
+                # For block
+                if can_be_blocked and self.ask_block(
+                    blocker=player,
+                    blocked_player=current_player,
+                    action=action,
+                    target=target
+                ):
+                    block_successful = self.handle_block(
+                        blocker=player,
+                        blocked_player=current_player,
+                        action=action,
+                        target=target
+                    )
+                    return block_successful is False
 
         # No challenge or block occurred
         return True
 
-    def ask_challenge(self, player, current_player, action, target):
-        if player.is_ai:
-            return self.ai_decide_to_challenge()
+    def ask_block(self, blocker: Player, blocked_player: Player, action: str, target: Player = None):
+        if blocker.is_ai:
+            return self.ai_decide_to_block()
         else:
-            return self.view.get_challenge_decision(
-                challenger=player,
-                challenged=current_player,
+            return self.view.get_block_decision(blocker=blocker, blocked_player=blocked_player, action=action)
+
+    def handle_block(self, blocker: Player, blocked_player: Player, action: str, target: Player = None):
+        """
+        Handle a block attempt.
+        return True if the block is successful, False otherwise.
+        """
+        # If the target player decides to challenge the block
+        if blocked_player.is_ai:
+            challenge_decision = self.ai_decide_to_challenge()
+        else:
+            challenge_decision = self.view.get_challenge_decision(
+                challenger=blocked_player,
+                challenged=blocker,
                 action=action,
                 target=target
             )
 
-    def ask_block(self, player, action, target):
-        if target.is_ai:
-            return self.ai_decide_to_block()
+        if challenge_decision:
+            # Handle the challenge to the block
+            return self.handle_challenge(challenger=blocker, challenged=blocked_player, action=action)
+
+        # If there's no challenge to the block, or the challenge to the block fails
+        self.view.block_successful(blocker=blocker, blocked_player=blocked_player, action=action)
+        return True  # The block is successful, and the action does not proceed
+
+    def ask_challenge(self, challenged: Player, challenger: Player, action: str, target: Player = None):
+        if challenger.is_ai:
+            return self.ai_decide_to_challenge()
         else:
-            return self.view.get_block_decision(player, action, target)
+            return self.view.get_challenge_decision(
+                challenger=challenger,
+                challenged=challenged,
+                action=action,
+                target=target
+            )
 
     def handle_challenge(self, challenger: Player, challenged: Player, action: str):
         """
@@ -259,30 +302,10 @@ class GameController:
 
     def replace_player_card(self, challenged: Player, claimed_card: str):
         challenged.cards.remove(claimed_card)
+        # put the card back to the deck
+        self.reshuffle_deck([claimed_card])
         card = self.take_card_from_deck()
         challenged.cards.append(card)
-
-    def resolve_influence_loss(self, player: Player):
-        player.reveal_card()
-
-    def handle_block(self, player: Player, action: str, target: Player = None):
-        """
-        Handle a block attempt.
-        return True if the block is successful, False otherwise.
-        """
-        # If the target player decides to challenge the block
-        if target.is_ai:
-            challenge_decision = self.ai_decide_to_challenge(player, target, action)
-        else:
-            challenge_decision = self.view.get_challenge_decision(player, target, action, target)
-
-        if challenge_decision:
-            # Handle the challenge to the block
-            return self.handle_challenge(target, player, action)
-
-        # If there's no challenge to the block, or the challenge to the block fails
-        self.view.block_successful(player, action, target)
-        return True  # The block is successful, and the action does not proceed
 
     # Methods for player actions
     def income(self, player):
@@ -352,17 +375,20 @@ class GameController:
     def ai_decide_to_challenge(self):
         # TODO: Finish this method
         # Randomly decide to challenge or not
-        self.view.print_ai_thinking(about="deciding to challenge")
+        self.view.print_ai_thinking(about="deciding to challenge or not")
         sleep(1)
         return random.choice([True, False])
 
     def ai_decide_to_block(self):
         # TODO: Finish this method
-        self.view.print_ai_thinking(about="deciding to block")
+        self.view.print_ai_thinking(about="deciding to block or not")
         sleep(1)
         return random.choice([True, False])
 
     # Helper methods
+    def resolve_influence_loss(self, player: Player):
+        player.reveal_card()
+
     def player_available_actions(self, player):
         # Return a list of available actions for the player
         actions = []

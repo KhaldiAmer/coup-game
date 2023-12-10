@@ -126,7 +126,12 @@ class GameView:
         print(f"What would you like to do, {player.name}?")
         for i, option in enumerate(options):
             print(f"{i + 1}. {actions_dict[option]}")
-        option_number = int(input("Enter the number of your action: "))
+        option_number = input("Enter the number of your choice: ")
+        # validate option number
+        if not option_number.isdigit():
+            self.print_error("Invalid option. Try again.")
+            return self.get_player_action(player, options)
+        option_number = int(option_number)
         if option_number > len(options) or option_number < 1:
             self.print_error("Invalid option. Try again.")
             return self.get_player_action(player, options)
@@ -197,9 +202,14 @@ class GameView:
         Return True if the player decides to challenge
         Return False if the player decides not to challenge
         """
+        target_text = ""
+        if target is challenger:
+            target_text = f" on you."
+        elif target:
+            target_text = f" on {target.name}."
+
         print(f"{challenger.name}, would you like to challenge {challenged.name}?")
-        target_name = f" on {target.name}" if target else ""
-        print(f"{challenged.name} is performing a/an {colorize_text(action, action)} {target_name}.")
+        print(f"{challenged.name} is performing a/an {colorize_text(action, action)}{target_text}.")
         decision = input("Enter 'y' to challenge and 'n' to allow: ")
         if decision == "y":
             return True
@@ -208,16 +218,19 @@ class GameView:
         else:
             self.print_error("Invalid decision. Try again.")
             return self.get_challenge_decision(
-                challenger, challenged, action, target
+                challenger, challenged, action
             )
 
-    def get_block_decision(self, player, action, target):
+    def get_block_decision(self, blocker, blocked_player, action):
         """
         Return True if the player decides to block
         Return False if the player decides not to block
         """
-        print(f"{target.name}, would you like to block?")
-        print(f"{player.name} is performing a/an {action} on you.")
+        print(f"{blocker.name}, would you like to block?")
+        print(f"{blocked_player.name} is performing a/an {colorize_text(action, action)}.")
+        # Print the cards that the challenger player has
+        print("you have the following cards:")
+        print(" ".join([f"[{colorize_card(card)}]" for card in blocker.cards]))
         decision = input("Enter 'y' to block or 'n' to allow: ")
         if decision == "y":
             return True
@@ -225,10 +238,10 @@ class GameView:
             return False
         else:
             self.print_error("Invalid decision. Try again.")
-            return self.get_block_decision(player, action, target)
+            return self.get_block_decision(blocker, blocked_player, action)
 
-    def block_successful(self, player, action, target):
-        print(f"{target.name} blocked {player.name}'s {action}.")
+    def block_successful(self, blocker, blocked_player, action):
+        print(f"{blocker.name} blocked {blocked_player.name}'s {action}.")
 
     def choose_cards_to_exchange(self, player, cards):
         """

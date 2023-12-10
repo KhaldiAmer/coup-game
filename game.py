@@ -24,7 +24,7 @@ def main():
         can_perform_action = controller.challenge_or_block(
             action,
             current_player,
-            target,
+            target
         )
 
         # Step 3: Perform the action
