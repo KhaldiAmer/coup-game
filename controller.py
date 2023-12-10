@@ -170,6 +170,7 @@ class GameController:
         current_player = self.current_player
         target = None
         if current_player.is_ai:
+            self.view.print_ai_thinking()
             sleep(1)
             # AI logic to choose an action
             player_options = self.player_available_actions(
@@ -284,7 +285,7 @@ class GameController:
             return self.handle_challenge(target, player, action)
 
         # If there's no challenge to the block, or the challenge to the block fails
-        self.view.block_successful(target, action)
+        self.view.block_successful(player, action, target)
         return True  # The block is successful, and the action does not proceed
 
     # Methods for player actions
@@ -355,13 +356,15 @@ class GameController:
     def ai_decide_to_challenge(self, player, target, action):
         # TODO: Finish this method
         # Randomly decide to challenge or not
+        self.view.print_ai_thinking()
         sleep(1)
-        return False  # random.choice([True, False])
+        return random.choice([True, False])
 
     def ai_decide_to_block(self, player, action):
         # TODO: Finish this method
+        self.view.print_ai_thinking()
         sleep(1)
-        return False  # random.choice([True, False])
+        return random.choice([True, False])
 
     # Helper methods
     def player_available_actions(self, player):

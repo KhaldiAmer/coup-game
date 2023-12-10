@@ -39,7 +39,7 @@ class GameView:
         current_player = players[current_player_index]
         is_ai = current_player.is_ai
         if is_ai:
-            print(f"{Fore.YELLOW}AI's turn -> {current_player.name} {Style.RESET}")
+            print(f"{Fore.DARK_CYAN}{current_player.name}'s turn {Style.RESET}")
         else:
             print("Other players:")
             for i, player in enumerate(players):
@@ -54,10 +54,11 @@ class GameView:
             print(f"Coins: {colorize_amount(current_player.coins)}")
             cards = " ".join([f"[{colorize_card(card)}]" for card in current_player.cards])
             print(f"Cards: {cards}\n")
-            revealed_cards = " ".join([
-                f"[{colorize_card(card)}]" for card in current_player.revealed
-            ])
-            print(f"Revealed cards: {revealed_cards}\n")
+            if current_player.revealed:
+                revealed_cards = " ".join([
+                    f"[{colorize_card(card)}]" for card in current_player.revealed
+                ])
+                print(f"Revealed cards: {revealed_cards}\n")
 
     def print_error(self, error):
         print(f"{Fore.RED}{error}{Style.RESET}")
@@ -179,10 +180,10 @@ class GameView:
         self.print_coup(player, "target")
 
     def challenge_failed(self, challenger, challenged, claimed_card):
-        print(f"Challenge failed. {challenged.name} did have a {claimed_card}.")
+        print(f"{Back.RED}Challenge failed. {challenged.name} did have a {claimed_card}.{Style.RESET}")
 
     def challenge_succeeded(self, challenger, challenged, claimed_card):
-        print(f"Challenge succeeded. {challenged.name} did not have a {claimed_card}.")
+        print(f"{Fore.GREEN}Challenge succeeded. {challenged.name} did not have a {claimed_card}.{Style.RESET}")
 
     def get_challenge_decision(
         self, challenger, challenged, action, target=None
@@ -221,8 +222,8 @@ class GameView:
             self.print_error("Invalid decision. Try again.")
             return self.get_block_decision(player, action, target)
 
-    def block_successful(self, blocker, action, character, target):
-        print(f"{blocker.name} blocked {target.name}'s {action} {character}.")
+    def block_successful(self, player, action, target):
+        print(f"{target.name} blocked {player.name}'s {action}.")
 
     def choose_cards_to_exchange(self, player, cards):
         """
@@ -243,3 +244,6 @@ class GameView:
             cards_to_keep.append(cards[card_index])
 
         return cards_to_keep
+
+    def print_ai_thinking(self): 
+        print(f"{Fore.DARK_CYAN}AI thinking...{Style.RESET}")
