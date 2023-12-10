@@ -41,7 +41,7 @@ COUP_RULES_CONFIG = {
         "income": 2,
         "cost": 0,
         "blocked_by": ["duke"],
-        "can_be_challenged": True
+        "can_be_challenged": False
     },
     "income": {
         "performed_by": None,
@@ -80,7 +80,7 @@ class Player:
 
         if len(self.cards) == 1:
             self.view.display_player_revealed_card(self.name, self.cards[0])
-            self.revealed += self.cards.pop()
+            self.revealed.extend([self.cards.pop()])
             # Check if the player is eliminated
             self.check_elimination()
             return
@@ -91,8 +91,9 @@ class Player:
             card_index = random.choice([0, 1])
         else:
             card_index = self.view.get_card_to_reveal(self)
+
         self.view.display_player_revealed_card(self.name, self.cards[card_index])
-        self.revealed += self.cards.pop(card_index)
+        self.revealed.extend([self.cards.pop(card_index)])
 
         # Check if the player is eliminated
         self.check_elimination()
@@ -100,7 +101,6 @@ class Player:
     def check_elimination(self):
         if len(self.cards) == 0:
             self.view.display_player_eliminated(self.name)
-            self.is_eliminated = True
 
     @property
     def is_eliminated(self):
@@ -182,7 +182,7 @@ class GameController:
                 current_player,
                 player_options
             )
-        if action in ["assassinate", "steal", "exchange"]:
+        if action in ["assassinate", "steal", "coup"]:
             possible_targets = self.get_other_players(
                 current_player
             )
@@ -205,36 +205,35 @@ class GameController:
         can_be_challenged = COUP_RULES_CONFIG[action].get("can_be_challenged", False)
         can_be_blocked = COUP_RULES_CONFIG[action].get("blocked_by", [])
 
-        start_index = (self.players.index(current_player) + 1) % len(self.players)
-        players_to_ask = self.players[start_index:] + self.players[:start_index]
+        players_to_ask = self.get_other_players(current_player)
 
         for player in players_to_ask:
             is_target = player == target
-            if player != current_player and not player.is_eliminated:
+            if player != current_player and not player.is_eliminated: # TODO: Delete eliminated as its handled in get_other_players
                 # Handle challenge
-                if can_be_challenged and self.ask_challenge(player, current_player, action):
+                if can_be_challenged and self.ask_challenge(player, current_player, action, target):
                     challenge_successful = self.handle_challenge(player, current_player, action)
                     return not challenge_successful
 
                 # Handle block
-                if is_target and can_be_blocked and self.ask_block(player, action):
-                    block_successful = self.handle_block(player, action)
+                if is_target and can_be_blocked and self.ask_block(player, action, target):
+                    block_successful = self.handle_block(player, action, target)
                     return not block_successful
 
         # No challenge or block occurred
         return True
 
-    def ask_challenge(self, player, current_player, action):
+    def ask_challenge(self, player, current_player, action, target):
         if player.is_ai:
             return self.ai_decide_to_challenge(player, current_player, action)
         else:
-            return self.view.get_challenge_decision(player, current_player, action)
+            return self.view.get_challenge_decision(player, current_player, action, target)
 
-    def ask_block(self, player, action):
+    def ask_block(self, player, action, target):
         if player.is_ai:
             return self.ai_decide_to_block(player, action)
         else:
-            return self.view.get_block_decision(player, action)
+            return self.view.get_block_decision(player, action, target)
 
     def handle_challenge(self, challenger: Player, challenged: Player, action: str):
         """
@@ -264,7 +263,7 @@ class GameController:
     def resolve_influence_loss(self, player: Player):
         player.reveal_card()
 
-    def handle_block(self, blocker: Player, action: str, action_player: Player):
+    def handle_block(self, player: Player, action: str, target: Player = None):
         """
         Handle a block attempt.
         - blocker: The player attempting to block.
@@ -273,17 +272,17 @@ class GameController:
         return True if the block is successful, False otherwise.
         """
         # If the action player decides to challenge the block
-        if action_player.is_ai:
-            challenge_decision = self.ai_decide_to_challenge(action_player, blocker, action)
+        if player.is_ai:
+            challenge_decision = self.ai_decide_to_challenge(player, target, action)
         else:
-            challenge_decision = self.view.get_challenge_decision(action_player, blocker, action)
+            challenge_decision = self.view.get_challenge_decision(player, target, action, target)
 
         if challenge_decision:
             # Handle the challenge to the block
-            return self.handle_challenge(action_player, blocker, action)
+            return self.handle_challenge(target, player, action)
 
         # If there's no challenge to the block, or the challenge to the block fails
-        self.view.block_successful(blocker, action)
+        self.view.block_successful(target, action)
         return True  # The block is successful, and the action does not proceed
 
     # Methods for player actions
@@ -320,12 +319,23 @@ class GameController:
         if len(self.deck) < 2:
             self.view.print_error("Not enough cards in the deck.")
             raise Exception("Not enough cards in the deck.")
+
         # Take 2 cards from the deck
         cards_to_choose_from = player.cards + [self.take_card_from_deck(), self.take_card_from_deck()]
-        cards_to_keep = self.view.choose_cards_to_exchange(player, cards_to_choose_from)
-        # Remove the cards to keep from the cards to choose from
+
+        # Choose 2 cards to keep
+        if player.is_ai:
+            cards_to_keep = random.sample(cards_to_choose_from, 2)
+        else:
+            cards_to_keep = self.view.choose_cards_to_exchange(player, cards_to_choose_from)
+
+        # Set new player cards
+        # and remove the remaining cards
+        # to keep from the cards to choose from
+        player.cards = cards_to_keep
         for card in cards_to_keep:
             cards_to_choose_from.remove(card)
+
         # Put the cards to choose from back to the deck
         self.reshuffle_deck(cards_to_choose_from)
 
@@ -343,10 +353,12 @@ class GameController:
     def ai_decide_to_challenge(self, player, target, action):
         # TODO: Finish this method
         # Randomly decide to challenge or not
-        return True  # random.choice([True, False])
+        sleep(1)
+        return False  # random.choice([True, False])
 
     def ai_decide_to_block(self, player, action):
         # TODO: Finish this method
+        sleep(1)
         return False  # random.choice([True, False])
 
     # Helper methods
@@ -389,7 +401,12 @@ class GameController:
         elif action == "assassinate" and target:
             self.assassinate(player, target)
             self.view.print_assassinate(player, target)
-        # Add other actions here
+        elif action == "exchange":
+            self.exchange(player)
+            self.view.print_exchange(player)
+        elif action == "steal" and target:
+            self.steal(player, target)
+            self.view.print_steal(player, target)
         else:
             raise Exception("Unknown action.")
 
@@ -410,7 +427,17 @@ class GameController:
             player for player in self.players if not player.is_eliminated
         ]
         return len(active_players) == 1
+    
+    def get_winner(self):
+        # Return the winner of the game
+        active_players = [
+            player for player in self.players if not player.is_eliminated
+        ]
+        if len(active_players) != 1:
+            raise Exception("The game is not over yet.")
 
+        return active_players[0]
+    
     def reset(self):
         # Prompt the user for number of players
         number_of_players = int(input("Enter number of players: "))

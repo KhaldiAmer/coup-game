@@ -5,7 +5,6 @@ from controller import GameController
 def main():
     controller = GameController()
     controller.view.display_welcome_message()
-
     while not controller.is_game_over():
         controller.view.display_state(
             controller.players,
@@ -27,11 +26,14 @@ def main():
         if can_perform_action:
             controller.perform_action(action, current_player, target)
 
+        # Step 4: Check if game is over
         if controller.is_game_over():
-            controller.view.display_game_over()
+            winner = controller.get_winner()
+            controller.view.display_game_over(winner)
             if controller.view.ask_to_play_again():
                 controller = GameController()
                 controller.view.display_welcome_message()
+                break
             else:
                 break
 

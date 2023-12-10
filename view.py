@@ -16,7 +16,6 @@ class PlayerView:
         pass
 
     def get_card_to_reveal(self, player):
-        input("Choose a card to reveal: ")
         for index, card in enumerate(player.cards):
             print(f"{index + 1}. {card}")
         card_index = int(input("Enter card number: ")) - 1
@@ -41,7 +40,7 @@ class GameView:
         current_player = players[current_player_index]
         is_ai = current_player.is_ai
         if is_ai:
-            print(f"{Fore.YELLOW}AI's turn{Style.RESET}")
+            print(f"{Fore.YELLOW}AI's turn -> {current_player.name} {Style.RESET}")
         else:
             print("Other players:")
             for i, player in enumerate(players):
@@ -56,16 +55,20 @@ class GameView:
             print(f"Coins: {colorize_amount(current_player.coins)}")
             cards = " ".join([f"[{colorize_card(card)}]" for card in current_player.cards])
             print(f"Cards: {cards}\n")
+            revealed_cards = " ".join([
+                f"[{colorize_card(card)}]" for card in current_player.revealed
+            ])
+            print(f"Revealed cards: {revealed_cards}\n")
 
     def print_error(self, error):
         print(f"{Fore.RED}{error}{Style.RESET}")
 
-    def announce_action(self, player, action, character="", target_name=""):
+    def announce_action(self, player, action, character="", target=None):
         """
         Format the action based on the character and action:
         """
         character_text = f"by [{character}]" if character else ""
-        target_name_text = f" on {target_name}" if target_name else ""
+        target_name_text = f" on {target.name}" if target else ""
         text = f"{player.name} choose to perform [{action}] {character_text}{target_name_text}" 
         if action == "income":
             print(f"{Fore.YELLOW}{text}{Style.RESET}")
@@ -86,23 +89,26 @@ class GameView:
         else:
             print(text)
 
-    def print_steal(self, player, target_name):
-        self.announce_action(player, "steal", "captain", target_name)
+    def print_steal(self, player, target):
+        self.announce_action(player, "steal", "captain", target)
 
     def print_income(self, player):
         self.announce_action(player, "income")
+        print(f"{player.name} has {colorize_amount(player.coins)} coins now.")
 
     def print_foreign_aid(self, player):
         self.announce_action(player, "foreign_aid")
+        print(f"{player.name} has {colorize_amount(player.coins)} coins now.")
 
-    def print_coup(self, player, target_name):
-        self.announce_action(player, "coup", target_name=target_name)
+    def print_coup(self, player, target):
+        self.announce_action(player, "coup", target=target)
 
     def print_tax(self, player):
         self.announce_action(player, "tax", "duke")
+        print(f"{player.name} has {colorize_amount(player.coins)} coins now.")
 
-    def print_assassinate(self, player, target_name):
-        self.announce_action(player, "assassinated", "assassin", target_name=target_name) 
+    def print_assassinate(self, player, target):
+        self.announce_action(player, "assassinated", "assassin", target=target) 
 
     def print_exchange(self, player):
         self.announce_action(player, "exchange", "ambassador")
@@ -144,7 +150,8 @@ class GameView:
     # Additional methods for displaying information and results
 
     @staticmethod
-    def display_game_over():
+    def display_game_over(winner):
+        print(f"{Fore.GREEN}{winner.name.capitalize()} won the game!{Style.RESET}")
         print(f"{Fore.GREEN}Game Over{Style.RESET}")
         # Display the winner and final state of the game
 
@@ -178,16 +185,16 @@ class GameView:
         print(f"Challenge succeeded. {challenged.name} did not have a {claimed_card}.")
 
     def get_challenge_decision(
-        self, challenger, challenged, claimed_card, action, character, target
+        self, challenger, challenged, action, target=None
     ):
         """
         Return True if the player decides to challenge
         Return False if the player decides not to challenge
         """
         print(f"{challenger.name}, would you like to challenge {challenged.name}?")
-        print(f"{challenged.name} claims to be a {claimed_card}.")
-        print(f"{challenged.name} is performing a {action} {character} on {target.name}.")
-        decision = input("Enter 'y' for yes or 'n' for no: ")
+        target_name = f" on {target.name}" if target else ""
+        print(f"{challenged.name} is performing a/an {colorize_text(action, action)} {target_name}.")
+        decision = input("Enter 'y' to challenge and 'n' to allow: ")
         if decision == "y":
             return True
         elif decision == "n":
@@ -195,24 +202,24 @@ class GameView:
         else:
             self.print_error("Invalid decision. Try again.")
             return self.get_challenge_decision(
-                challenger, challenged, claimed_card, action, character, target
+                challenger, challenged, action, target
             )
 
-    def get_block_decision(self, blocker, action, character, target):
+    def get_block_decision(self, player, action, target):
         """
         Return True if the player decides to block
         Return False if the player decides not to block
         """
-        print(f"{blocker.name}, would you like to block?")
-        print(f"{target.name} is performing a {action} {character}.")
-        decision = input("Enter 'y' for yes or 'n' for no: ")
+        print(f"{target.name}, would you like to block?")
+        print(f"{player.name} is performing a/an {action} on you.")
+        decision = input("Enter 'y' to block or 'n' to allow: ")
         if decision == "y":
             return True
         elif decision == "n":
             return False
         else:
             self.print_error("Invalid decision. Try again.")
-            return self.get_block_decision(blocker, action, character, target)  
+            return self.get_block_decision(player, action, target)  
 
     def block_successful(self, blocker, action, character, target):
         print(f"{blocker.name} blocked {target.name}'s {action} {character}.")
@@ -230,7 +237,7 @@ class GameView:
         for i in range(num_cards_to_exchange):
             card_index = int(input("Enter card number: ")) - 1
             # Validate card index
-            if card_index > len(cards) or card_index < 1:
+            if card_index > len(cards) or card_index < 0:
                 self.print_error("Invalid card. Try again.")
                 return self.choose_cards_to_exchange(player, cards)
             cards_to_keep.append(cards[card_index])
