@@ -58,6 +58,8 @@ COUP_RULES_CONFIG = {
         "can_be_challenged": False
     }
 }
+
+# constants
 MAX_COINS_FOR_COUP = 10
 MIN_PLAYERS = 2
 MAX_PLAYERS = 6

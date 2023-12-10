@@ -33,7 +33,7 @@ def main():
             if controller.view.ask_to_play_again():
                 controller = GameController()
                 controller.view.display_welcome_message()
-                break
+                continue
             else:
                 break
 
