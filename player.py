@@ -19,7 +19,7 @@ class Player:
         # Choose a card to reveal
         card_index = 0
         if self.is_ai:
-            self.view.print_ai_thinking_reveal()
+            self.view.print_ai_thinking_reveal(self)
             sleep(1)
             card_index = random.choice([0, 1]) if len(self.cards) > 1 else 0
         elif len(self.cards) > 1:

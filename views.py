@@ -19,8 +19,9 @@ class PlayerView:
     def display_player_revealed_card(self, player_name, card):
         print(f"{Fore.RED}{player_name} revealed {card}{Style.RESET}")
 
-    def print_ai_thinking_reveal(self):
-        print(f"{Fore.DARK_CYAN}AI thinking about what to reveal...{Style.RESET}")
+    def print_ai_thinking_reveal(self, player=None):
+        player_name = player.name if player else "AI"
+        print(f"{Fore.DARK_CYAN}{player_name} thinking about what to reveal...{Style.RESET}")
 
 
 class GameView:
@@ -153,7 +154,7 @@ class GameView:
 
     @staticmethod
     def display_game_over(winner):
-        print(f"{Fore.GREEN}{winner.name.capitalize()} won the game!{Style.RESET}")
+        print(f"{Fore.GREEN}{winner.name} won the game!{Style.RESET}")
         print(f"{Fore.GREEN}Game Over{Style.RESET}")
         # Display the winner and final state of the game
 
@@ -255,9 +256,10 @@ class GameView:
 
         return cards_to_keep
 
-    def print_ai_thinking(self, about=""):
+    def print_ai_thinking(self, about="", player=None):
+        player_name = player.name if player else "AI"
         about_text = f" about {about}" if about else ""
-        print(f"{Fore.DARK_CYAN}AI thinking{about_text}...{Style.RESET}")
+        print(f"{Fore.DARK_CYAN}{player_name} thinking{about_text}...{Style.RESET}")
 
     def ask_for_player_name(self):
         return input("Enter your name: ") or "Human"

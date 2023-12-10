@@ -72,7 +72,7 @@ class GameController:
         current_player = self.current_player
         target = None
         if current_player.is_ai:
-            self.view.print_ai_thinking(about="choosing an action")
+            self.view.print_ai_thinking(about="choosing an action", player=current_player)
             sleep(1)
             # AI logic to choose an action
             player_options = self.player_available_actions(
@@ -149,7 +149,7 @@ class GameController:
 
     def ask_block(self, blocker: Player, blocked_player: Player, action: str, target: Player = None):
         if blocker.is_ai:
-            return self.ai_decide_to_block()
+            return self.ai_decide_to_block(blocker)
         else:
             return self.view.get_block_decision(blocker=blocker, blocked_player=blocked_player, action=action)
 
@@ -160,7 +160,7 @@ class GameController:
         """
         # If the target player decides to challenge the block
         if blocked_player.is_ai:
-            challenge_decision = self.ai_decide_to_challenge()
+            challenge_decision = self.ai_decide_to_challenge(blocked_player)
         else:
             challenge_decision = self.view.get_challenge_decision(
                 challenger=blocked_player,
@@ -179,7 +179,7 @@ class GameController:
 
     def ask_challenge(self, challenged: Player, challenger: Player, action: str, target: Player = None):
         if challenger.is_ai:
-            return self.ai_decide_to_challenge()
+            return self.ai_decide_to_challenge(challenger)
         else:
             return self.view.get_challenge_decision(
                 challenger=challenger,
@@ -280,16 +280,16 @@ class GameController:
             target.coins -= steal_amount
 
     #  AI player methods
-    def ai_decide_to_challenge(self):
+    def ai_decide_to_challenge(self, player: Player):
         # TODO: Finish this method
         # Randomly decide to challenge or not
-        self.view.print_ai_thinking(about="deciding to challenge or not")
+        self.view.print_ai_thinking(about="deciding to challenge or not", player=player)
         sleep(1)
         return random.choice([True, False])
 
-    def ai_decide_to_block(self):
+    def ai_decide_to_block(self, player: Player):
         # TODO: Finish this method
-        self.view.print_ai_thinking(about="deciding to block or not")
+        self.view.print_ai_thinking(about="deciding to block or not", player=player)
         sleep(1)
         return random.choice([True, False])
 
